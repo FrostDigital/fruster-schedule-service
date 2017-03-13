@@ -6,6 +6,7 @@ const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
 const conf = require("../conf");
 const lolex = require("lolex");
+const jobStates = require("../constants").jobStates;
 
 describe("CronRunner", () => {
 
@@ -42,13 +43,13 @@ describe("CronRunner", () => {
 				let scheduledJob1 = cronRunner.getJob(job1.id);
 				let scheduledJob2 = cronRunner.getJob(job2.id);
 				
-				expect(scheduledJob1.state).toBe("scheduled");
+				expect(scheduledJob1.state).toBe(jobStates.scheduled);
 				expect(scheduledJob1.subject).toBe(job1.subject);
 				expect(scheduledJob1.cron).toBeUndefined();
 				expect(scheduledJob1.at).toEqual(new Date(job1.at));
 				expect(scheduledJob1.timeZone).toEqual(conf.defaultTimeZone);
 
-				expect(scheduledJob2.state).toBe("scheduled");
+				expect(scheduledJob2.state).toBe(jobStates.scheduled);
 				expect(scheduledJob2.subject).toBe(job2.subject);
 				expect(scheduledJob2.cron).toEqual(job2.cron);
 				expect(scheduledJob2.at).toBeUndefined();
@@ -114,7 +115,7 @@ describe("CronRunner", () => {
 					})
 					.then(() => jobRepo.get(fireOnceJob.id))
 					.then(job => {
-						expect(job.state).toBe("completed");
+						expect(job.state).toBe(jobStates.completed);
 						expect(job.updated).toBeDefined();
 						expect(job.lastFailure).toBeUndefined();
 						expect(job.invocations[0].success).toBe(true);
@@ -138,7 +139,7 @@ describe("CronRunner", () => {
 				wait(1500)				
 					.then(() => jobRepo.get(fireOnceJob.id))
 					.then(job => {
-						expect(job.state).toBe("failed");
+						expect(job.state).toBe(jobStates.failed);
 						expect(job.invocations.length).toBe(1);
 						expect(job.invocations[0].success).toBe(false);
 						expect(job.invocations[0].response.status).toBe(400);
@@ -175,7 +176,7 @@ describe("CronRunner", () => {
 					})
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
-						expect(job.state).toBe("scheduled");
+						expect(job.state).toBe(jobStates.scheduled);
 						done();
 					});
 			});
@@ -195,8 +196,9 @@ describe("CronRunner", () => {
 				wait(1500)					
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
-						expect(job.state).toBe("scheduled");
+						expect(job.state).toBe(jobStates.scheduledAfterFailure);
 						expect(job.lastFailure).toBeDefined();
+						expect(job.failureCount).toBe(1);
 						done();
 					});
 			});

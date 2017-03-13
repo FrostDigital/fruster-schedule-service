@@ -75,13 +75,18 @@ describe("JobRepo", () => {
 			id: "id3",
 			state: jobStates.initial
 		});
+		const job4 = fixtures.job({
+			id: "id4",
+			state: jobStates.scheduledAfterFailure
+		});
 
 		repo.create(job1)
 			.then(repo.create(job2))
 			.then(repo.create(job3))
+			.then(repo.create(job4))
 			.then(() => repo.findAllSchedulable())
 			.then(all => {
-				expect(all.length).toBe(3);							
+				expect(all.length).toBe(4);							
 				done();
 			});
 	});
@@ -91,7 +96,7 @@ describe("JobRepo", () => {
 		
 		repo.create(job)			
 			.then((createdJob) => {	
-				createdJob.state = "failure";
+				createdJob.state = jobStates.failed;
 				return repo.update(createdJob, { startTime: new Date(), endTime: new Date()});			
 			})
 			.then(updatedJob => {
