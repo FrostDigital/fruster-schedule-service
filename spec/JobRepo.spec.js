@@ -102,11 +102,13 @@ describe("JobRepo", () => {
 			.then(updatedJob => {
 				expect(updatedJob.lastFailure).toBeDefined();			
 				expect(updatedJob.failureCount).toBe(1);							
+				expect(updatedJob.totalFailureCount).toBe(1);							
 				expect(updatedJob.invocations.length).toBe(1);							
 				return repo.update(updatedJob, {aInvocation: ""});
 			})
 			.then(updatedJob => {
 				expect(updatedJob.failureCount).toBe(2);
+				expect(updatedJob.totalFailureCount).toBe(2);
 				done();
 			});		
 	});
