@@ -20,6 +20,7 @@ const constants = {
 	jobStates: {
 		initial: "initial",
 		scheduled: "scheduled",
+		scheduledAfterFailure: "scheduledAfterFailure",
 		running: "running",
 		completed: "completed",
 		failed: "failed",

@@ -13,6 +13,10 @@ module.exports = {
 	defaultTimeZone: process.env.DEFAULT_TIMEZONE || "Europe/Stockholm",
 
 	// Interval when jobs are synced from db
-	syncInterval: process.env.SYNC_INTERVAL || "10s"
+	syncInterval: process.env.SYNC_INTERVAL || "10s",
+
+	// Max failed attempts until a repeating job is considered to be failed	
+	// Is global for all jobs but this may be even more limited per job
+	maxFailures: parseInt(process.env.MAX_FAILURES || "100")
 	
 };
