@@ -14,7 +14,16 @@ const constants = {
 		jobCreated: "schedule-service.job-created"
 	},
 
-	consuming: {}
+	consuming: {},
+
+	jobStates: {
+		initial: "initial",
+		scheduled: "scheduled",
+		running: "running",
+		completed: "completed",
+		failed: "failed",
+		removed: "removed"
+	}
 };
 
 module.exports = constants;

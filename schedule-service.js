@@ -4,6 +4,7 @@ const constants = require("./constants");
 const JobRepo = require("./lib/repos/JobRepo");
 const CreateJobHandler = require("./lib/CreateJobHandler");
 const CronRunner = require("./lib/cron/CronRunner");
+const conf = require("./conf");
 
 module.exports.start = function(busAddress, mongoUrl)  {
 
@@ -15,6 +16,9 @@ module.exports.start = function(busAddress, mongoUrl)  {
 				
 			bus.subscribe(constants.exposing.createJob, req => createJob.handle(req));
 
-			return new CronRunner(jobRepo).synchronize();
+			return new CronRunner(jobRepo, {
+				start: true,
+				syncInterval: conf.syncInterval 
+			});
 		});
 };
