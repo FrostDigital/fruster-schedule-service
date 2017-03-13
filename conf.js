@@ -10,6 +10,9 @@ module.exports = {
 	masterCheckInterval: process.env.MASTER_CHECK_INTERVAL || "500ms",
 
 	// Default timezone used if none is provided
-	defaultTimeZone: process.env.DEFAULT_TIMEZONE || "Europe/Stockholm"
+	defaultTimeZone: process.env.DEFAULT_TIMEZONE || "Europe/Stockholm",
+
+	// Interval when jobs are synced from db
+	syncInterval: process.env.SYNC_INTERVAL || "10s"
 	
 };
