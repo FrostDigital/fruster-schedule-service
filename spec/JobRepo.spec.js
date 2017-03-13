@@ -2,6 +2,7 @@ const testUtils = require("fruster-test-utils");
 const bus = require("fruster-bus");
 const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
+const jobStates = require("../constants").jobStates;
 
 describe("JobRepo", () => {
 
@@ -19,7 +20,7 @@ describe("JobRepo", () => {
 	it("should insert job when it does not exist", (done) => {
 		const job = fixtures.job();
 
-		repo.upsert(job).then(createdJob => {
+		repo.create(job).then(createdJob => {
 			expect(createdJob.id).toBe(job.id);			
 			done();
 		});
@@ -29,12 +30,12 @@ describe("JobRepo", () => {
 		let job = fixtures.job();
 		let created;
 
-		repo.upsert(job)
+		repo.create(job)
 			.then(wait) // wait so created date is not same (not sure if needed though)
 			.then((createdJob) => {
 				created = createdJob.created;
 				job.subject = "updated";
-				return repo.upsert(job);
+				return repo.create(job);
 			})
 			.then(updatedJob => {
 				expect(updatedJob.id).toBe(job.id);			
@@ -51,7 +52,7 @@ describe("JobRepo", () => {
 	it("should find all jobs", (done) => {
 		const job = fixtures.job();
 
-		repo.upsert(job)
+		repo.create(job)
 			.then(() => repo.findAll())
 			.then(all => {
 				expect(all.length).toBe(1);			
@@ -61,21 +62,26 @@ describe("JobRepo", () => {
 			});
 	});
 
-	it("should find all scheduled and running jobs", (done) => {
+	it("should find all schedulable jobs", (done) => {
 		const job1 = fixtures.job({
 			id: "id1",
-			state: "running"
+			state: jobStates.running
 		});
 		const job2 = fixtures.job({
 			id: "id2",
-			state: "scheduled"
+			state: jobStates.scheduled
+		});
+		const job3 = fixtures.job({
+			id: "id3",
+			state: jobStates.initial
 		});
 
-		repo.upsert(job1)
-			.then(repo.upsert(job2))
-			.then(() => repo.findAllScheduledAndRunning())
+		repo.create(job1)
+			.then(repo.create(job2))
+			.then(repo.create(job3))
+			.then(() => repo.findAllSchedulable())
 			.then(all => {
-				expect(all.length).toBe(2);							
+				expect(all.length).toBe(3);							
 				done();
 			});
 	});
@@ -83,7 +89,7 @@ describe("JobRepo", () => {
 	it("should update with failure", (done) => {
 		let job = fixtures.job();
 		
-		repo.upsert(job)			
+		repo.create(job)			
 			.then((createdJob) => {	
 				createdJob.state = "failure";
 				return repo.update(createdJob, { startTime: new Date(), endTime: new Date()});			

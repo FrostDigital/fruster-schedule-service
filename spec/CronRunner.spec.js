@@ -64,7 +64,8 @@ describe("CronRunner", () => {
 
 			// Add fake job that does not exist in database
 			cronRunner.jobs.push({
-				id: "fakeJob"
+				id: "fakeJob",
+				stop: function() {}
 			});
 
 			cronRunner.synchronize().then(() => {
@@ -216,11 +217,11 @@ describe("CronRunner", () => {
 		const cronJob = fixtures.cronJob();
 
 		if(job) {
-			return jobRepo.upsert(job);
+			return jobRepo.create(job);
 		} else {
 			return Promise.all([
-				jobRepo.upsert(fireOnceJob),
-				jobRepo.upsert(cronJob)
+				jobRepo.create(fireOnceJob),
+				jobRepo.create(cronJob)
 			]);			
 		}
 	}
