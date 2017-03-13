@@ -24,6 +24,5 @@ module.exports.start = function(busAddress, mongoUrl)  {
 						
 			bus.subscribe(constants.exposing.createJob, req => createJob.handle(req));
 			bus.subscribe(constants.exposing.removeJob, req => removeJob.handle(req));
-			
 		});
 };
