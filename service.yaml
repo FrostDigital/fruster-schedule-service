@@ -1,0 +1,89 @@
+serviceName: Fruster Schedule Service
+
+desc: > 
+  Service that runs jobs on a given interval or time.
+
+  Job state is persisted for logging and retry logic (depending on job configuration).
+
+  Fruster job service uses database for locking a job so only one execution is guarenteed. However
+  it is recommended that any jobs that are triggered are idempotent.
+
+exposing:
+  schedule-service.create-job:
+    desc: >
+      Creates or updates (upserts) a new job.
+
+    examples:
+      - title: Create a job that will be fired every day at 10 am
+        req: >
+          {
+            "reqId": "89b9e6b7-76ac-4817-8e27-c1d2d0bd13c8",
+            "data": {
+              // Unique id of job, if none is provided a UUID will be created
+              "id": "send",
+
+              // Optional display name of job
+              "name": "Daily usage report"
+              
+              // Optional description of job
+              "description": "Sends out daily usage report via email to admins",
+              
+              // Subject to invoke
+              "subject": "analytics-service.send-report",
+
+              // Optional data object that will be included in 
+              "data": {},
+              
+              // Optional tags
+              "tags": [ "analytics" ],
+                  
+              // Cron pattern that describes when job will run
+              "cron": "* * * * * *",
+                
+              // If job should be triggered once by date
+              "at": "2017-02-23T16:00:00"                                                      
+            }
+          }
+
+  schedule-service.remove-job:
+    desc: >
+      TODO!
+
+      Removes a job so it will not run again.
+
+      If job is running at the time when removing, we will handle the reponse and then remove the job.
+
+  schedule-service.pause-job:
+    desc: >
+      TODO! 
+
+      Pauses an existing job. 
+
+      This works for all job types, however it makes for sense to use for 
+      jobs that are repeating.
+    
+  schedule-service.get-job: 
+    desc: >
+      TODO!
+
+      Returns a job and optionally a list of invocations of that job.
+
+    examples:
+      - title: Get a job
+        req: >
+          {
+            "reqId": "d22bfa8a-8237-45f8-a87a-b008f6dac4dc",
+            "data": {
+              // Id of job to get
+              "id": "c84909e9-560c-40be-8a5a-e41a4d9025e5"
+              
+              // If and how many invocations that will be retrieved
+              // TODO: Pagination
+              "includeInvocations": "all"              
+            }
+          }
+
+        res: >
+          {}
+
+

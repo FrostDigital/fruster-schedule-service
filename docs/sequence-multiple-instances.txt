@@ -1,0 +1,13 @@
+title Cron master
+
+Instance 1->Mongo: Register (upsert) with expiry
+Instance 2->Mongo: Register (upsert) with expiry
+Instance 1->Mongo: Get jobs and save in mem
+Instance 2->Mongo: Get jobs and save in mem
+Foo svc->Instance 1: Create job
+Instance 1->Mongo: Upsert job
+Instance 1->Instance 2: schedule-service.job-created
+Instance 2->Mongo: Get jobs and save in mem
+Instace 1->Instance 1: Do cron job, am I master?\nYes
+Instance 1->Foo svc: foo-service.something
+Instace 2->Instance 2: Do cron job, am I master?\nNo

@@ -1,0 +1,28 @@
+{
+    "type": "object",
+    "properties": {
+    	"id": {
+            "type": "string",
+            "description": "Id of job"
+    	},
+        "subject": {
+            "type": "string",
+            "description": "Subject to invoke"
+        },
+        "cron": {
+            "type": "string",
+            "description": "Cron expression for when to run job"         	
+        },
+        "at": {
+            "type": "string",
+            "description": "Timestamp when to run job"
+        },
+        "description": {
+            "type": "string",
+            "description": "Description of job"
+        }
+    },
+    "required": [
+        "subject", "id"
+    ]
+}

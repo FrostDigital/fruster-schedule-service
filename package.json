@@ -1,0 +1,31 @@
+{
+  "name": "fruster-template-js",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./app.js",
+    "test": "node ./spec/support/jasmine-runner.js"
+  },
+  "dependencies": {
+    "cron": "^1.2.1",
+    "fruster-bus": "~0.1.11",
+    "fruster-errors": "0.0.7",
+    "fruster-health": "~0.0.8",
+    "fruster-log": "~0.0.9",
+    "fruster-validator": "0.0.1",
+    "lodash": "^4.17.4",
+    "mongodb": "^2.2.24",
+    "ms": "^0.7.2",
+    "uuid": "^2.0.3"
+  },
+  "devDependencies": {
+    "fruster-custom-matchers": "0.0.1",
+    "fruster-test-utils": "^0.3.8",
+    "jasmine": "2.5.2",
+    "jasmine-spec-reporter": "2.7.0",
+    "lolex": "^1.6.0"
+  },
+  "engines": {
+    "node": "6.4.0"
+  }
+}
