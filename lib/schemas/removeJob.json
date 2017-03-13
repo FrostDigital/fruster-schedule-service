@@ -1,0 +1,12 @@
+{
+    "type": "object",
+    "properties": {
+    	"id": {
+            "type": "string",
+            "description": "Id of job to remove"
+    	}
+    },
+    "required": [
+        "id"
+    ]
+}
