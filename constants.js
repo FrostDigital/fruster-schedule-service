@@ -7,7 +7,8 @@ const constants = {
 
 	exposing: {
 		foo: "schedule-service.get-foos",
-		createJob: "schedule-service.create-job"
+		createJob: "schedule-service.create-job",
+		removeJob: "schedule-service.remove-job"
 	},
 
 	publishing: {

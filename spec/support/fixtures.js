@@ -4,7 +4,8 @@ const entities = [
     "job",
     "fireOnceJob",
     "cronJob",
-    "invocation"
+    "invocation",
+    "removeJob"
 ];
 
 entities.forEach(entity => {
@@ -49,6 +50,10 @@ const invocation = {
     endTime: new Date(),
     responseData: {},
     reqId: "d42105cc-6d66-43bf-884b-ccf022619550"
+};
+
+const removeJob = {
+    id: "job-to-remove"
 };
 
 

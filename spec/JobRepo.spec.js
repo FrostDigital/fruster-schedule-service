@@ -106,6 +106,18 @@ describe("JobRepo", () => {
 			});		
 	});
 
+	it("should remove job", (done) => {
+		let job = fixtures.job();
+		
+		repo.create(job)			
+			.then(() => repo.remove(job.id))
+			.then((removedJob) => {
+				expect(removedJob.removed).toBe(true);			
+				expect(removedJob.id).toBe(job.id);			
+				done();
+			});			
+	});
+
 
 	function wait(o) {
 		return new Promise(resolve => {
