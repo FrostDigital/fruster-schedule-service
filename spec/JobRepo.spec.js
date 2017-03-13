@@ -62,8 +62,14 @@ describe("JobRepo", () => {
 	});
 
 	it("should find all scheduled and running jobs", (done) => {
-		const job1 = fixtures.job({state: "running"});
-		const job2 = fixtures.job({state: "scheduled"});
+		const job1 = fixtures.job({
+			id: "id1",
+			state: "running"
+		});
+		const job2 = fixtures.job({
+			id: "id2",
+			state: "scheduled"
+		});
 
 		repo.upsert(job1)
 			.then(repo.upsert(job2))
