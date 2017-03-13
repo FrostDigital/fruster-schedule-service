@@ -20,6 +20,10 @@
         "description": {
             "type": "string",
             "description": "Description of job"
+        },
+        "maxFailures": {
+            "type": "integer",
+            "description": "Max failed attempts until a repeating job is failed"
         }
     },
     "required": [

@@ -103,7 +103,7 @@ describe("JobRepo", () => {
 				expect(updatedJob.lastFailure).toBeDefined();			
 				expect(updatedJob.failureCount).toBe(1);							
 				expect(updatedJob.invocations.length).toBe(1);							
-				return repo.update(updatedJob);
+				return repo.update(updatedJob, {aInvocation: ""});
 			})
 			.then(updatedJob => {
 				expect(updatedJob.failureCount).toBe(2);

@@ -16,7 +16,8 @@ module.exports.start = function(busAddress, mongoUrl)  {
 			
 			let cronRunner = new CronRunner(jobRepo, {
 				start: true,
-				syncInterval: conf.syncInterval 
+				syncInterval: conf.syncInterval,
+				maxFailures: conf.maxFailures
 			});
 			
 			let createJob = new CreateJobHandler(jobRepo, cronRunner);
