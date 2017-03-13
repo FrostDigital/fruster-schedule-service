@@ -86,7 +86,7 @@ describe("CronRunner", () => {
 		let repeatedJob;
 
 		beforeEach(() => {		
-			const nowish = new Date(Date.now() + 100);	
+			const nowish = new Date(Date.now() + 1000);	
 			fireOnceJob = fixtures.fireOnceJob({at: nowish});
 			repeatedJob = fixtures.cronJob({cron: "* * * * * *"});
 		});
@@ -126,7 +126,6 @@ describe("CronRunner", () => {
 			});
 
 			it("should run job once and save failure", (done) => {
-				let numInvocations = 0;
 				mockService({
 					subject: "foo-service.fire-once",			
 					response: {
@@ -137,7 +136,7 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1500)				
+				wait()				
 					.then(() => jobRepo.get(fireOnceJob.id))
 					.then(job => {
 						expect(job.state).toBe(jobStates.failed);
@@ -167,11 +166,11 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1500)
+				wait(1200)
 					.then(() => {
 						expect(numInvocations).toBe(1);
 					})
-					.then(() => wait(1500))
+					.then(() => wait(1200))
 					.then(() => {
 						expect(numInvocations).toBeGreaterThan(1);
 					})
@@ -193,7 +192,7 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1500)					
+				wait(1200)					
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
 						expect(job.state).toBe(jobStates.scheduledAfterFailure);
@@ -216,7 +215,7 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1100)					
+				wait(1200)					
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
 						expect(job.state).toBe(jobStates.failed);
@@ -250,7 +249,7 @@ describe("CronRunner", () => {
 					} 
 				});
 
-				wait(1100)					
+				wait(1200)					
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
 						expect(job.state).toBe(jobStates.scheduledAfterFailure);
@@ -258,7 +257,7 @@ describe("CronRunner", () => {
 						expect(job.failureCount).toBe(1);
 						expect(job.totalFailureCount).toBe(1);	
 					})
-					.then(() => wait(1100))
+					.then(() => wait(1200))
 					.then(() => jobRepo.get(repeatedJob.id))
 					.then(job => {
 						expect(job.state).toBe(jobStates.scheduled);						
@@ -271,7 +270,7 @@ describe("CronRunner", () => {
 	});
 
 
-	function wait(timeout = 500) {
+	function wait(timeout = 1000) {
 		return new Promise(resolve => {
 			setTimeout(() => {
 				resolve();				
