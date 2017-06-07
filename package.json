@@ -10,7 +10,7 @@
     "cron": "^1.2.1",
     "fruster-bus": "~0.1.11",
     "fruster-errors": "0.0.7",
-    "fruster-health": "~0.0.8",
+    "fruster-health": "~0.0.9",
     "fruster-log": "~0.0.9",
     "fruster-validator": "0.0.1",
     "lodash": "^4.17.4",
