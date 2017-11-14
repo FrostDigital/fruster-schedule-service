@@ -11,6 +11,7 @@ describe("CreateJobHandler", () => {
 		mongoUrl: "mongodb://localhost:27017/schedule-service-test",
 		service: scheduleService,
 		bus: bus,
+		mockNats: true,
 		afterStart: (connection) => {
 			return Promise.resolve();
 		}
