@@ -7,10 +7,11 @@ const RemoveJobHandler = require("./lib/RemoveJobHandler");
 const CronRunner = require("./lib/cron/CronRunner");
 const conf = require("./conf");
 
-module.exports.start = function(busAddress, mongoUrl)  {
+module.exports.start = (busAddress, mongoUrl) => {
 
 	return bus.connect(busAddress)
 		.then(() => mongo.connect(mongoUrl))
+		.then((db) => createIndexes(db))
 		.then((db) =>  {
 			let jobRepo = new JobRepo(db);
 			
@@ -27,3 +28,17 @@ module.exports.start = function(busAddress, mongoUrl)  {
 			bus.subscribe(constants.exposing.removeJob, req => removeJob.handle(req));
 		});
 };
+
+
+async function createIndexes(db) {
+	try {
+		await db.collection(constants.collections.jobs).createIndex({id: 1}, true);
+		await db.collection(constants.collections.invocations).createIndex({id: 1}, true);        
+		await db.collection(constants.collections.invocations).createIndex({created: 1}, {
+			expireAfterSeconds: conf.invocationsTTL / 1000
+		});
+	} catch(err) {
+		log.warn("Failed creating db indexes", err);
+	}
+	return db;
+}

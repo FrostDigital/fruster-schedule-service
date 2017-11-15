@@ -1,3 +1,5 @@
+const ms = require("ms");
+
 module.exports = {
 
 	// NATS servers, set multiple if using cluster
@@ -17,6 +19,9 @@ module.exports = {
 
 	// Max failed attempts until a repeating job is considered to be failed	
 	// Is global for all jobs but this may be even more limited per job
-	maxFailures: parseInt(process.env.MAX_FAILURES || "100")
+	maxFailures: parseInt(process.env.MAX_FAILURES || "100"),
+
+	// For how long time invocations history will be saved
+	invocationsTTL: ms(process.env.INVOCATIONS_TTL || "60d")
 	
 };

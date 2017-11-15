@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "cron": "^1.2.1",
-    "fruster-bus": "^0.2.7",
+    "fruster-bus": "^0.2.10",
     "fruster-errors": "0.0.7",
     "fruster-health": "0.0.11",
     "fruster-log": "0.0.11",
@@ -20,12 +20,12 @@
   },
   "devDependencies": {
     "fruster-custom-matchers": "0.0.1",
-    "fruster-test-utils": "^0.3.12",
+    "fruster-test-utils": "^0.3.17",
     "jasmine": "2.5.2",
     "jasmine-spec-reporter": "2.7.0",
     "lolex": "^1.6.0"
   },
   "engines": {
-    "node": "6.4.0"
+    "node": "7.10.0"
   }
 }

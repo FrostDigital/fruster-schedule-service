@@ -100,7 +100,7 @@ describe("CronRunner", () => {
 					.then(done);
 			});
 
-			it("should run job once", (done) => {			
+			it("should run job once", async (done) => {			
 				let numInvocations = 0;
 				mockService({
 					subject: "foo-service.fire-once",
@@ -110,22 +110,27 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait()
-					.then(() => {
-						expect(numInvocations).toBe(1);
-					})
-					.then(() => jobRepo.get(fireOnceJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.completed);
-						expect(job.updated).toBeDefined();
-						expect(job.lastFailure).toBeUndefined();
-						expect(job.invocations[0].success).toBe(true);
-						expect(job.invocations[0].response.status).toBe(200);
-						done();
-					});
+				await wait();
+
+				expect(numInvocations).toBe(1);
+
+				const job = await jobRepo.get(fireOnceJob.id);
+				
+				expect(job.state).toBe(jobStates.completed);
+				expect(job.updated).toBeDefined();
+				expect(job.lastFailure).toBeUndefined();
+
+				const invocations = await jobRepo.invocationRepo.findAll();
+				
+				expect(invocations.length).toBe(1);
+				expect(invocations[0].success).toBe(true);
+				expect(invocations[0].response.status).toBe(200);
+				expect(invocations[0].jobId).toBe(job.id);				
+				
+				done();			
 			});
 
-			it("should run job once and save failure", (done) => {
+			it("should run job once and save failure", async (done) => {
 				mockService({
 					subject: "foo-service.fire-once",			
 					response: {
@@ -136,15 +141,19 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait()				
-					.then(() => jobRepo.get(fireOnceJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.failed);
-						expect(job.invocations.length).toBe(1);
-						expect(job.invocations[0].success).toBe(false);
-						expect(job.invocations[0].response.status).toBe(400);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(fireOnceJob.id);
+		
+				expect(job.state).toBe(jobStates.failed);
+				
+				const invocations = await jobRepo.invocationRepo.findAll();
+				
+				expect(invocations.length).toBe(1);
+				expect(invocations[0].success).toBe(false);
+				expect(invocations[0].response.status).toBe(400);
+
+				done();					
 			});
 		});
 
