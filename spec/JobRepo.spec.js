@@ -65,19 +65,23 @@ describe("JobRepo", () => {
 	it("should find all schedulable jobs", (done) => {
 		const job1 = fixtures.job({
 			id: "id1",
-			state: jobStates.running
+			state: jobStates.running,
+			invocations: []
 		});
 		const job2 = fixtures.job({
 			id: "id2",
-			state: jobStates.scheduled
+			state: jobStates.scheduled,
+			invocations: []		
 		});
 		const job3 = fixtures.job({
 			id: "id3",
-			state: jobStates.initial
+			state: jobStates.initial,
+			invocations: []
 		});
 		const job4 = fixtures.job({
 			id: "id4",
-			state: jobStates.scheduledAfterFailure
+			state: jobStates.scheduledAfterFailure,
+			invocations: []
 		});
 
 		repo.create(job1)
@@ -86,7 +90,8 @@ describe("JobRepo", () => {
 			.then(repo.create(job4))
 			.then(() => repo.findAllSchedulable())
 			.then(all => {
-				expect(all.length).toBe(4);							
+				expect(all.length).toBe(4);
+				expect(all[0].invocations).toBeUndefined();									
 				done();
 			});
 	});
