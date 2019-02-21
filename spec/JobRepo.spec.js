@@ -11,6 +11,7 @@ describe("JobRepo", () => {
 	testUtils.startBeforeEach({
 		mongoUrl: "mongodb://localhost:27017/job-repo-test",
 		bus: bus,
+		mockNats: true,
 		afterStart: (connection) => {
 			repo = new JobRepo(connection.db);
 			return Promise.resolve();
@@ -21,7 +22,7 @@ describe("JobRepo", () => {
 		const job = fixtures.job();
 
 		repo.create(job).then(createdJob => {
-			expect(createdJob.id).toBe(job.id);			
+			expect(createdJob.id).toBe(job.id);
 			done();
 		});
 	});
@@ -38,9 +39,9 @@ describe("JobRepo", () => {
 				return repo.create(job);
 			})
 			.then(updatedJob => {
-				expect(updatedJob.id).toBe(job.id);			
-				expect(updatedJob.subject).toBe("updated");	
-				expect(updatedJob.created).toEqual(created);				
+				expect(updatedJob.id).toBe(job.id);
+				expect(updatedJob.subject).toBe("updated");
+				expect(updatedJob.created).toEqual(created);
 			})
 			.then(() => repo.findAll())
 			.then(all => {
@@ -55,9 +56,9 @@ describe("JobRepo", () => {
 		repo.create(job)
 			.then(() => repo.findAll())
 			.then(all => {
-				expect(all.length).toBe(1);			
-				expect(all[0]._id).toBeUndefined();			
-				expect(all[0].id).toBe(job.id);			
+				expect(all.length).toBe(1);
+				expect(all[0]._id).toBeUndefined();
+				expect(all[0].id).toBe(job.id);
 				done();
 			});
 	});
@@ -71,7 +72,7 @@ describe("JobRepo", () => {
 		const job2 = fixtures.job({
 			id: "id2",
 			state: jobStates.scheduled,
-			invocations: []		
+			invocations: []
 		});
 		const job3 = fixtures.job({
 			id: "id3",
@@ -91,42 +92,42 @@ describe("JobRepo", () => {
 			.then(() => repo.findAllSchedulable())
 			.then(all => {
 				expect(all.length).toBe(4);
-				expect(all[0].invocations).toBeUndefined();									
+				expect(all[0].invocations).toBeUndefined();
 				done();
 			});
 	});
 
 	it("should update with failure", (done) => {
 		let job = fixtures.job();
-		
-		repo.create(job)			
-			.then((createdJob) => {	
+
+		repo.create(job)
+			.then((createdJob) => {
 				createdJob.state = jobStates.failed;
-				return repo.update(createdJob, { startTime: new Date(), endTime: new Date()});			
+				return repo.update(createdJob, { startTime: new Date(), endTime: new Date() });
 			})
 			.then(updatedJob => {
-				expect(updatedJob.lastFailure).toBeDefined();			
-				expect(updatedJob.failureCount).toBe(1);							
-				expect(updatedJob.totalFailureCount).toBe(1);											
-				return repo.update(updatedJob, {aInvocation: ""});
+				expect(updatedJob.lastFailure).toBeDefined();
+				expect(updatedJob.failureCount).toBe(1);
+				expect(updatedJob.totalFailureCount).toBe(1);
+				return repo.update(updatedJob, { aInvocation: "" });
 			})
 			.then(updatedJob => {
 				expect(updatedJob.failureCount).toBe(2);
 				expect(updatedJob.totalFailureCount).toBe(2);
 				done();
-			});		
+			});
 	});
 
 	it("should remove job", (done) => {
 		let job = fixtures.job();
-		
-		repo.create(job)			
+
+		repo.create(job)
 			.then(() => repo.remove(job.id))
 			.then((removedJob) => {
-				expect(removedJob.removed).toBe(true);			
-				expect(removedJob.id).toBe(job.id);			
+				expect(removedJob.removed).toBe(true);
+				expect(removedJob.id).toBe(job.id);
 				done();
-			});			
+			});
 	});
 
 
