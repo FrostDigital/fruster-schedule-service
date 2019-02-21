@@ -19,13 +19,15 @@ describe("CreateJobHandler", () => {
 
 	it("should fail validation", (done) => {
 		bus.request(constants.exposing.createJob, {
-			req: "reqId",
+			reqId: "reqId",
 			data: {}
 		})
-		.catch(err => {			
-			expect(err).toBeError("BAD_REQUEST");
-			done();
-		});
+			.catch(err => {
+				expect(err.status).toBe(400);
+				expect(err.error.code).toBe("BAD_REQUEST");
+
+				done();
+			});
 	});
 
 	it("should create a job", (done) => {
@@ -36,17 +38,17 @@ describe("CreateJobHandler", () => {
 			subject: constants.publishing.jobCreated,
 			expectData: (data) => {
 				jobCreatedInvoked = true;
-				expect(data.id).toBe(jobReq.data.id);			
+				expect(data.id).toBe(jobReq.data.id);
 			}
 		})
 
-		bus.request(constants.exposing.createJob, jobReq)			
-			.then(resp => {			
-				expect(resp.status).toBe(200);			
-				expect(resp.data.id).toBe(jobReq.data.id);			
-				expect(resp.data.subject).toBe(jobReq.data.subject);			
-				expect(resp.data.cron).toBe(jobReq.data.cron);			
-				expect(jobCreatedInvoked).toBeTruthy(`${constants.publishing.jobCreated} should have been published`);			
+		bus.request(constants.exposing.createJob, jobReq)
+			.then(resp => {
+				expect(resp.status).toBe(200);
+				expect(resp.data.id).toBe(jobReq.data.id);
+				expect(resp.data.subject).toBe(jobReq.data.subject);
+				expect(resp.data.cron).toBe(jobReq.data.cron);
+				expect(jobCreatedInvoked).toBeTruthy(`${constants.publishing.jobCreated} should have been published`);
 				done();
 			});
 	});

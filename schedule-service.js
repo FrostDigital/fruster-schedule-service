@@ -7,6 +7,7 @@ const CreateJobHandler = require("./lib/CreateJobHandler");
 const RemoveJobHandler = require("./lib/RemoveJobHandler");
 const CronRunner = require("./lib/cron/CronRunner");
 const conf = require("./conf");
+const docs = require("./lib/docs");
 
 module.exports.start = (busAddress, mongoUrl) => {
 
@@ -14,19 +15,33 @@ module.exports.start = (busAddress, mongoUrl) => {
 		.then(() => mongo.connect(mongoUrl))
 		.then((db) => createIndexes(db))
 		.then((db) => {
-			let jobRepo = new JobRepo(db);
+			const jobRepo = new JobRepo(db);
 
-			let cronRunner = new CronRunner(jobRepo, {
+			const cronRunner = new CronRunner(jobRepo, {
 				start: true,
 				syncInterval: conf.syncInterval,
 				maxFailures: conf.maxFailures
 			});
 
-			let createJob = new CreateJobHandler(jobRepo, cronRunner);
-			let removeJob = new RemoveJobHandler(jobRepo, cronRunner);
+			const CreateJobRequest = require("./lib/schemas/CreateJobRequest");
+			const RemoveJobRequest = require("./lib/schemas/RemoveJobRequest");
 
-			bus.subscribe(constants.exposing.createJob, req => createJob.handle(req));
-			bus.subscribe(constants.exposing.removeJob, req => removeJob.handle(req));
+			const createJob = new CreateJobHandler(jobRepo, cronRunner);
+			const removeJob = new RemoveJobHandler(jobRepo, cronRunner);
+
+			bus.subscribe({
+				subject: constants.exposing.createJob,
+				requestSchema: CreateJobRequest,
+				docs: docs.service.CREATE_JOB,
+				handle: req => createJob.handle(req)
+			});
+
+			bus.subscribe({
+				subject: constants.exposing.removeJob,
+				requestSchema: RemoveJobRequest,
+				docs: docs.service.REMOVE_JOB,
+				handle: req => removeJob.handle(req)
+			});
 		});
 };
 
