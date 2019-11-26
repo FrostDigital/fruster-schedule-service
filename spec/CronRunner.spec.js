@@ -185,7 +185,7 @@ describe("CronRunner", () => {
 				expect(job.state).toBe(jobStates.scheduled);
 			});
 
-			fit("should run repeated job and save failure", async () => {
+			it("should run repeated job and save failure", async () => {
 				mockService({
 					subject: "foo-service.cron",
 					response: {
