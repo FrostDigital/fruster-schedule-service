@@ -166,11 +166,11 @@ describe("CronRunner", () => {
 
 				await wait();
 
-				expect(mockFooService.invocations).toBe(1);
+				expect(mockFooService.invocations).toBe(1, "should be 1 invocation first tick");
 
 				await wait();
 
-				expect(mockFooService.invocations).toBeGreaterThan(1);
+				expect(mockFooService.invocations).toBeGreaterThan(1, "should be 1+ invocation next tick");
 
 				const job = await jobRepo.get(repeatedJob.id);
 
