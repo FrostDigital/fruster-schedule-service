@@ -13,7 +13,7 @@ describe("CronRunner", () => {
 	let jobRepo;
 
 	testUtils.startBeforeEach({
-		mongoUrl: "mongodb://localhost:27017/cron-runner-test",
+		mongoUrl: "mongodb://localhost:27017/cron-runner-tests",
 		bus: bus,
 		mockNats: true,
 		afterStart: (connection) => {
