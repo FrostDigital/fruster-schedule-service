@@ -62,9 +62,6 @@ describe("CronRunner", () => {
 		});
 
 		it("should synchronize jobs and purge ones in memory that is deleted", (done) => {
-			const job1 = fixtures.fireOnceJob();
-			const job2 = fixtures.cronJob();
-
 			// Add fake job that does not exist in database
 			cronRunner.jobs.push({
 				id: "fakeJob",
@@ -101,19 +98,20 @@ describe("CronRunner", () => {
 					.then(done);
 			});
 
-			it("should run job once", async (done) => {
-				let numInvocations = 0;
-				mockService({
+			it("should run job once", async () => {
+				const mockFooService = mockService({
 					subject: "foo-service.fire-once",
-					expectData: (data) => {
-						numInvocations++;
+					response: ({ data }) => {
 						expect(data).toBe("fireOnceJobData");
+						return {
+							status: 200
+						}
 					}
 				});
 
 				await wait();
 
-				expect(numInvocations).toBe(1);
+				expect(mockFooService.invocations).toBe(1);
 
 				const job = await jobRepo.get(fireOnceJob.id);
 
@@ -127,8 +125,6 @@ describe("CronRunner", () => {
 				expect(invocations[0].success).toBe(true);
 				expect(invocations[0].response.status).toBe(200);
 				expect(invocations[0].jobId).toBe(job.id);
-
-				done();
 			});
 
 			it("should run job once and save failure", async (done) => {
@@ -166,29 +162,28 @@ describe("CronRunner", () => {
 					.then(done);
 			});
 
-			it("should run repeated job", (done) => {
-				let numInvocations = 0;
-				mockService({
+			it("should run repeated job", async () => {
+				const mockFooService = mockService({
 					subject: "foo-service.cron",
-					expectData: (data) => {
-						numInvocations++;
+					response: ({ data }) => {
 						expect(data).toBe("cronJobData");
+						return {
+							status: 200
+						}
 					}
 				});
 
-				wait(1200)
-					.then(() => {
-						expect(numInvocations).toBe(1);
-					})
-					.then(() => wait(1200))
-					.then(() => {
-						expect(numInvocations).toBeGreaterThan(1);
-					})
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduled);
-						done();
-					});
+				await wait(1200);
+
+				expect(mockFooService.invocations).toBe(1);
+
+				await wait(1200);
+
+				expect(mockFooService.invocations).toBeGreaterThan(1);
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduled);
 			});
 
 			it("should run repeated job and save failure", (done) => {
