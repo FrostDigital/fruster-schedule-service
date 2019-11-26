@@ -29,48 +29,45 @@ describe("CronRunner", () => {
 
 	describe("with jobs to synchronize", () => {
 
-		beforeEach(done => {
-			addMockJobs().then(done);
+		beforeEach(async () => {
+			await addMockJobs();
 		});
 
-		it("should synchronize jobs", (done) => {
+		it("should synchronize jobs", async () => {
 			const job1 = fixtures.fireOnceJob();
 			const job2 = fixtures.cronJob();
 
-			cronRunner.synchronize().then(() => {
-				expect(cronRunner.jobs.length).toBe(2);
+			await cronRunner.synchronize();
 
-				let scheduledJob1 = cronRunner.getJob(job1.id);
-				let scheduledJob2 = cronRunner.getJob(job2.id);
+			expect(cronRunner.jobs.length).toBe(2);
 
-				expect(scheduledJob1.state).toBe(jobStates.scheduled);
-				expect(scheduledJob1.subject).toBe(job1.subject);
-				expect(scheduledJob1.cron).toBeUndefined();
-				expect(scheduledJob1.at).toEqual(new Date(job1.at));
-				expect(scheduledJob1.timeZone).toEqual(conf.defaultTimeZone);
+			let scheduledJob1 = cronRunner.getJob(job1.id);
+			let scheduledJob2 = cronRunner.getJob(job2.id);
 
-				expect(scheduledJob2.state).toBe(jobStates.scheduled);
-				expect(scheduledJob2.subject).toBe(job2.subject);
-				expect(scheduledJob2.cron).toEqual(job2.cron);
-				expect(scheduledJob2.at).toBeUndefined();
-				expect(scheduledJob2.timeZone).toEqual(conf.defaultTimeZone);
+			expect(scheduledJob1.state).toBe(jobStates.scheduled);
+			expect(scheduledJob1.subject).toBe(job1.subject);
+			expect(scheduledJob1.cron).toBeUndefined();
+			expect(scheduledJob1.at).toEqual(new Date(job1.at));
+			expect(scheduledJob1.timeZone).toEqual(conf.defaultTimeZone);
 
-				done();
-			});
+			expect(scheduledJob2.state).toBe(jobStates.scheduled);
+			expect(scheduledJob2.subject).toBe(job2.subject);
+			expect(scheduledJob2.cron).toEqual(job2.cron);
+			expect(scheduledJob2.at).toBeUndefined();
+			expect(scheduledJob2.timeZone).toEqual(conf.defaultTimeZone);
 		});
 
-		it("should synchronize jobs and purge ones in memory that is deleted", (done) => {
+		it("should synchronize jobs and purge ones in memory that are deleted", async () => {
 			// Add fake job that does not exist in database
 			cronRunner.jobs.push({
 				id: "fakeJob",
 				stop: function () { }
 			});
 
-			cronRunner.synchronize().then(() => {
-				expect(cronRunner.jobs.length).toBe(2);
-				expect(cronRunner.getJob("fakeJob")).toBeUndefined();
-				done();
-			});
+			await cronRunner.synchronize();
+
+			expect(cronRunner.jobs.length).toBe(2);
+			expect(cronRunner.getJob("fakeJob")).toBeUndefined();
 		});
 
 	});
@@ -89,10 +86,9 @@ describe("CronRunner", () => {
 
 		describe("once (at)", () => {
 
-			beforeEach((done) => {
-				addMockJobs(fireOnceJob)
-					.then(() => cronRunner.synchronize())
-					.then(done);
+			beforeEach(async () => {
+				await addMockJobs(fireOnceJob);
+				await cronRunner.synchronize();
 			});
 
 			it("should run job once", async () => {
