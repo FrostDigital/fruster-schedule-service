@@ -127,7 +127,7 @@ describe("CronRunner", () => {
 				expect(invocations[0].jobId).toBe(job.id);
 			});
 
-			it("should run job once and save failure", async (done) => {
+			it("should run job once and save failure", async () => {
 				mockService({
 					subject: "foo-service.fire-once",
 					response: {
@@ -150,7 +150,6 @@ describe("CronRunner", () => {
 				expect(invocations[0].success).toBe(false);
 				expect(invocations[0].response.status).toBe(400);
 
-				done();
 			});
 		});
 
@@ -186,7 +185,7 @@ describe("CronRunner", () => {
 				expect(job.state).toBe(jobStates.scheduled);
 			});
 
-			it("should run repeated job and save failure", (done) => {
+			fit("should run repeated job and save failure", async () => {
 				mockService({
 					subject: "foo-service.cron",
 					response: {
@@ -197,14 +196,13 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduledAfterFailure);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						done();
-					});
+				await wait(1200);
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduledAfterFailure);
+				expect(job.lastFailure).toBeDefined();
+				expect(job.failureCount).toBe(1);
 			});
 
 			it("should fail if failureCount exceeds maxFailures", (done) => {
@@ -277,9 +275,7 @@ describe("CronRunner", () => {
 
 	function wait(timeout = 1000) {
 		return new Promise(resolve => {
-			setTimeout(() => {
-				resolve();
-			}, timeout)
+			setTimeout(resolve, timeout);
 		})
 	}
 
