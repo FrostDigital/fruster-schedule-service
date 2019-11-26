@@ -266,7 +266,7 @@ describe("CronRunner", () => {
 	});
 
 
-	function wait(timeout = 1000) {
+	function wait(timeout = 1050) {
 		return new Promise(resolve => {
 			setTimeout(resolve, timeout);
 		})
