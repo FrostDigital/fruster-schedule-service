@@ -258,8 +258,8 @@ describe("CronRunner", () => {
 				const job2 = await jobRepo.get(repeatedJob.id)
 
 				expect(job2.state).toBe(jobStates.scheduled);
-				expect(job2.failureCount).toBe(0);
-				expect(job2.totalFailureCount).toBe(1);
+				expect(job2.failureCount).toBe(0, "failureCount");
+				expect(job2.totalFailureCount).toBe(1, "totalFailureCount");
 
 			});
 		});
