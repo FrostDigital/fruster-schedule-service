@@ -1,11 +1,9 @@
-const mongo = require("mongodb");
 const testUtils = require("fruster-test-utils");
 const bus = require("fruster-bus");
 const CronRunner = require("../lib/cron/CronRunner");
 const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
 const conf = require("../conf");
-const lolex = require("lolex");
 const jobStates = require("../constants").jobStates;
 const mockService = testUtils.mockService;
 
@@ -79,7 +77,6 @@ describe("CronRunner", () => {
 
 	describe("with jobs to run", () => {
 
-		let clock;
 		let fireOnceJob;
 		let repeatedJob;
 
@@ -155,10 +152,9 @@ describe("CronRunner", () => {
 
 		describe("repeated jobs (cron)", () => {
 
-			beforeEach((done) => {
-				addMockJobs(repeatedJob)
-					.then(() => cronRunner.synchronize())
-					.then(done);
+			beforeEach(async () => {
+				await addMockJobs(repeatedJob);
+				await cronRunner.synchronize();
 			});
 
 			it("should run repeated job", async () => {
@@ -172,11 +168,11 @@ describe("CronRunner", () => {
 					}
 				});
 
-				await wait(1200);
+				await wait();
 
 				expect(mockFooService.invocations).toBe(1);
 
-				await wait(1200);
+				await wait();
 
 				expect(mockFooService.invocations).toBeGreaterThan(1);
 
@@ -186,7 +182,7 @@ describe("CronRunner", () => {
 			});
 
 			it("should run repeated job and save failure", async () => {
-				mockService({
+				const mockFooService = mockService({
 					subject: "foo-service.cron",
 					response: {
 						status: 400,
@@ -196,16 +192,17 @@ describe("CronRunner", () => {
 					}
 				});
 
-				await wait(1200);
+				await wait();
 
 				const job = await jobRepo.get(repeatedJob.id);
 
 				expect(job.state).toBe(jobStates.scheduledAfterFailure);
 				expect(job.lastFailure).toBeDefined();
+				expect(mockFooService.invocations).toBe(1);
 				expect(job.failureCount).toBe(1);
 			});
 
-			it("should fail if failureCount exceeds maxFailures", (done) => {
+			it("should fail if failureCount exceeds maxFailures", async () => {
 				cronRunner.jobs[0].maxFailures = 1;
 
 				mockService({
@@ -218,17 +215,16 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.failed);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.failed);
+				expect(job.lastFailure).toBeDefined();
+				expect(job.failureCount).toBe(1);
 			});
 
-			it("should reset failureCount after success", (done) => {
+			it("should reset failureCount after success", async () => {
 				let count = 1;
 				mockService({
 					subject: "foo-service.cron",
@@ -252,22 +248,23 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduledAfterFailure);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						expect(job.totalFailureCount).toBe(1);
-					})
-					.then(() => wait(1200))
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduled);
-						expect(job.failureCount).toBe(0);
-						expect(job.totalFailureCount).toBe(1);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduledAfterFailure);
+				expect(job.lastFailure).toBeDefined();
+				expect(job.failureCount).toBe(1);
+				expect(job.totalFailureCount).toBe(1);
+
+				await wait();
+
+				const job2 = await jobRepo.get(repeatedJob.id)
+
+				expect(job2.state).toBe(jobStates.scheduled);
+				expect(job2.failureCount).toBe(0);
+				expect(job2.totalFailureCount).toBe(1);
+
 			});
 		});
 	});
