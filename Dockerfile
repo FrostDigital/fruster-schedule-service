@@ -1,5 +1,8 @@
 FROM mhart/alpine-node:8
 
+ARG SOURCE_VERSION=na
+ENV SOURCE_VERSION=$SOURCE_VERSION
+
 RUN apk add --update bash && rm -rf /var/cache/apk/*
 
 WORKDIR /app
