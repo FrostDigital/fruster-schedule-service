@@ -8,11 +8,10 @@
 	},
 	"dependencies": {
 		"cron": "^1.2.1",
-		"fruster-bus": "^0.5.3",
+		"fruster-bus": "^0.5.9",
 		"fruster-errors": "0.0.7",
 		"fruster-health": "0.0.13",
 		"fruster-log": "0.0.18",
-		"fruster-validator": "0.0.1",
 		"lodash": "^4.17.4",
 		"mongodb": "^2.2.30",
 		"ms": "^2.1.1",
@@ -20,8 +19,8 @@
 	},
 	"devDependencies": {
 		"fruster-custom-matchers": "0.0.1",
-		"fruster-test-utils": "^0.4.0",
-		"jasmine": "3.3.1",
+		"fruster-test-utils": "^0.5.0",
+		"jasmine": "3.5.0",
 		"jasmine-spec-reporter": "4.2.1",
 		"lolex": "^3.1.0"
 	},

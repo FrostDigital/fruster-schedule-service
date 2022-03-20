@@ -1,4 +1,3 @@
-const mongo = require("mongodb");
 const testUtils = require("fruster-test-utils");
 const bus = require("fruster-bus");
 const scheduleService = require("../schedule-service");
@@ -12,7 +11,7 @@ describe("CreateJobHandler", () => {
 		service: scheduleService,
 		bus: bus,
 		mockNats: true,
-		afterStart: (connection) => {
+		afterStart: () => {
 			return Promise.resolve();
 		}
 	});
@@ -33,14 +32,12 @@ describe("CreateJobHandler", () => {
 	it("should create a job", (done) => {
 		const jobReq = fixtures.jobReq();
 
-		let jobCreatedInvoked = false;
-		testUtils.mockService({
+		const mockJobCreated = testUtils.mockService({
 			subject: constants.publishing.jobCreated,
-			expectData: (data) => {
-				jobCreatedInvoked = true;
-				expect(data.id).toBe(jobReq.data.id);
+			response: {
+				status: 200
 			}
-		})
+		});
 
 		bus.request(constants.exposing.createJob, jobReq)
 			.then(resp => {
@@ -48,7 +45,7 @@ describe("CreateJobHandler", () => {
 				expect(resp.data.id).toBe(jobReq.data.id);
 				expect(resp.data.subject).toBe(jobReq.data.subject);
 				expect(resp.data.cron).toBe(jobReq.data.cron);
-				expect(jobCreatedInvoked).toBeTruthy(`${constants.publishing.jobCreated} should have been published`);
+				expect(mockJobCreated.invocations).toBe(1);
 				done();
 			});
 	});

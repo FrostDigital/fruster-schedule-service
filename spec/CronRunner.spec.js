@@ -1,11 +1,9 @@
-const mongo = require("mongodb");
 const testUtils = require("fruster-test-utils");
 const bus = require("fruster-bus");
 const CronRunner = require("../lib/cron/CronRunner");
 const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
 const conf = require("../conf");
-const lolex = require("lolex");
 const jobStates = require("../constants").jobStates;
 const mockService = testUtils.mockService;
 
@@ -15,7 +13,7 @@ describe("CronRunner", () => {
 	let jobRepo;
 
 	testUtils.startBeforeEach({
-		mongoUrl: "mongodb://localhost:27017/cron-runner-test",
+		mongoUrl: "mongodb://localhost:27017/cron-runner-tests",
 		bus: bus,
 		mockNats: true,
 		afterStart: (connection) => {
@@ -31,58 +29,51 @@ describe("CronRunner", () => {
 
 	describe("with jobs to synchronize", () => {
 
-		beforeEach(done => {
-			addMockJobs().then(done);
+		beforeEach(async () => {
+			await addMockJobs();
 		});
 
-		it("should synchronize jobs", (done) => {
+		it("should synchronize jobs", async () => {
 			const job1 = fixtures.fireOnceJob();
 			const job2 = fixtures.cronJob();
 
-			cronRunner.synchronize().then(() => {
-				expect(cronRunner.jobs.length).toBe(2);
+			await cronRunner.synchronize();
 
-				let scheduledJob1 = cronRunner.getJob(job1.id);
-				let scheduledJob2 = cronRunner.getJob(job2.id);
+			expect(cronRunner.jobs.length).toBe(2);
 
-				expect(scheduledJob1.state).toBe(jobStates.scheduled);
-				expect(scheduledJob1.subject).toBe(job1.subject);
-				expect(scheduledJob1.cron).toBeUndefined();
-				expect(scheduledJob1.at).toEqual(new Date(job1.at));
-				expect(scheduledJob1.timeZone).toEqual(conf.defaultTimeZone);
+			let scheduledJob1 = cronRunner.getJob(job1.id);
+			let scheduledJob2 = cronRunner.getJob(job2.id);
 
-				expect(scheduledJob2.state).toBe(jobStates.scheduled);
-				expect(scheduledJob2.subject).toBe(job2.subject);
-				expect(scheduledJob2.cron).toEqual(job2.cron);
-				expect(scheduledJob2.at).toBeUndefined();
-				expect(scheduledJob2.timeZone).toEqual(conf.defaultTimeZone);
+			expect(scheduledJob1.state).toBe(jobStates.scheduled);
+			expect(scheduledJob1.subject).toBe(job1.subject);
+			expect(scheduledJob1.cron).toBeUndefined();
+			expect(scheduledJob1.at).toEqual(new Date(job1.at));
+			expect(scheduledJob1.timeZone).toEqual(conf.defaultTimeZone);
 
-				done();
-			});
+			expect(scheduledJob2.state).toBe(jobStates.scheduled);
+			expect(scheduledJob2.subject).toBe(job2.subject);
+			expect(scheduledJob2.cron).toEqual(job2.cron);
+			expect(scheduledJob2.at).toBeUndefined();
+			expect(scheduledJob2.timeZone).toEqual(conf.defaultTimeZone);
 		});
 
-		it("should synchronize jobs and purge ones in memory that is deleted", (done) => {
-			const job1 = fixtures.fireOnceJob();
-			const job2 = fixtures.cronJob();
-
+		it("should synchronize jobs and purge ones in memory that are deleted", async () => {
 			// Add fake job that does not exist in database
 			cronRunner.jobs.push({
 				id: "fakeJob",
 				stop: function () { }
 			});
 
-			cronRunner.synchronize().then(() => {
-				expect(cronRunner.jobs.length).toBe(2);
-				expect(cronRunner.getJob("fakeJob")).toBeUndefined();
-				done();
-			});
+			await cronRunner.synchronize();
+
+			expect(cronRunner.jobs.length).toBe(2);
+			expect(cronRunner.getJob("fakeJob")).toBeUndefined();
 		});
 
 	});
 
 	describe("with jobs to run", () => {
 
-		let clock;
 		let fireOnceJob;
 		let repeatedJob;
 
@@ -95,25 +86,25 @@ describe("CronRunner", () => {
 
 		describe("once (at)", () => {
 
-			beforeEach((done) => {
-				addMockJobs(fireOnceJob)
-					.then(() => cronRunner.synchronize())
-					.then(done);
+			beforeEach(async () => {
+				await addMockJobs(fireOnceJob);
+				await cronRunner.synchronize();
 			});
 
-			it("should run job once", async (done) => {
-				let numInvocations = 0;
-				mockService({
+			it("should run job once", async () => {
+				const mockFooService = mockService({
 					subject: "foo-service.fire-once",
-					expectData: (data) => {
-						numInvocations++;
+					response: ({ data }) => {
 						expect(data).toBe("fireOnceJobData");
+						return {
+							status: 200
+						}
 					}
 				});
 
 				await wait();
 
-				expect(numInvocations).toBe(1);
+				expect(mockFooService.invocations).toBe(1);
 
 				const job = await jobRepo.get(fireOnceJob.id);
 
@@ -127,11 +118,9 @@ describe("CronRunner", () => {
 				expect(invocations[0].success).toBe(true);
 				expect(invocations[0].response.status).toBe(200);
 				expect(invocations[0].jobId).toBe(job.id);
-
-				done();
 			});
 
-			it("should run job once and save failure", async (done) => {
+			it("should run job once and save failure", async () => {
 				mockService({
 					subject: "foo-service.fire-once",
 					response: {
@@ -154,45 +143,42 @@ describe("CronRunner", () => {
 				expect(invocations[0].success).toBe(false);
 				expect(invocations[0].response.status).toBe(400);
 
-				done();
 			});
 		});
 
 		describe("repeated jobs (cron)", () => {
 
-			beforeEach((done) => {
-				addMockJobs(repeatedJob)
-					.then(() => cronRunner.synchronize())
-					.then(done);
+			beforeEach(async () => {
+				await addMockJobs(repeatedJob);
+				await cronRunner.synchronize();
 			});
 
-			it("should run repeated job", (done) => {
-				let numInvocations = 0;
-				mockService({
+			it("should run repeated job", async () => {
+				const mockFooService = mockService({
 					subject: "foo-service.cron",
-					expectData: (data) => {
-						numInvocations++;
+					response: ({ data }) => {
 						expect(data).toBe("cronJobData");
+						return {
+							status: 200
+						}
 					}
 				});
 
-				wait(1200)
-					.then(() => {
-						expect(numInvocations).toBe(1);
-					})
-					.then(() => wait(1200))
-					.then(() => {
-						expect(numInvocations).toBeGreaterThan(1);
-					})
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduled);
-						done();
-					});
+				await wait();
+
+				expect(mockFooService.invocations).toBe(1, "should be 1 invocation first tick");
+
+				await wait();
+
+				expect(mockFooService.invocations).toBeGreaterThan(1, "should be 1+ invocation next tick");
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduled);
 			});
 
-			it("should run repeated job and save failure", (done) => {
-				mockService({
+			it("should run repeated job and save failure", async () => {
+				const mockFooService = mockService({
 					subject: "foo-service.cron",
 					response: {
 						status: 400,
@@ -202,17 +188,17 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduledAfterFailure);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduledAfterFailure);
+				expect(job.lastFailure).toBeDefined();
+				expect(mockFooService.invocations).toBe(1);
+				expect(job.failureCount).toBe(1);
 			});
 
-			it("should fail if failureCount exceeds maxFailures", (done) => {
+			it("should fail if failureCount exceeds maxFailures", async () => {
 				cronRunner.jobs[0].maxFailures = 1;
 
 				mockService({
@@ -225,17 +211,16 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.failed);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.failed);
+				expect(job.lastFailure).toBeDefined();
+				expect(job.failureCount).toBe(1);
 			});
 
-			it("should reset failureCount after success", (done) => {
+			it("should reset failureCount after success", async () => {
 				let count = 1;
 				mockService({
 					subject: "foo-service.cron",
@@ -259,32 +244,31 @@ describe("CronRunner", () => {
 					}
 				});
 
-				wait(1200)
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduledAfterFailure);
-						expect(job.lastFailure).toBeDefined();
-						expect(job.failureCount).toBe(1);
-						expect(job.totalFailureCount).toBe(1);
-					})
-					.then(() => wait(1200))
-					.then(() => jobRepo.get(repeatedJob.id))
-					.then(job => {
-						expect(job.state).toBe(jobStates.scheduled);
-						expect(job.failureCount).toBe(0);
-						expect(job.totalFailureCount).toBe(1);
-						done();
-					});
+				await wait();
+
+				const job = await jobRepo.get(repeatedJob.id);
+
+				expect(job.state).toBe(jobStates.scheduledAfterFailure);
+				expect(job.lastFailure).toBeDefined();
+				expect(job.failureCount).toBe(1);
+				expect(job.totalFailureCount).toBe(1);
+
+				await wait();
+
+				const job2 = await jobRepo.get(repeatedJob.id)
+
+				expect(job2.state).toBe(jobStates.scheduled);
+				expect(job2.failureCount).toBe(0, "failureCount");
+				expect(job2.totalFailureCount).toBe(1, "totalFailureCount");
+
 			});
 		});
 	});
 
 
-	function wait(timeout = 1000) {
+	function wait(timeout = 1100) {
 		return new Promise(resolve => {
-			setTimeout(() => {
-				resolve();
-			}, timeout)
+			setTimeout(resolve, timeout);
 		})
 	}
 
