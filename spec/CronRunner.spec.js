@@ -8,6 +8,7 @@ const jobStates = require("../constants").jobStates;
 const mockService = testUtils.mockService;
 
 describe("CronRunner", () => {
+	process.env.BUS_TIMEOUT = "5s";
 	let cronRunner;
 	let jobRepo;
 
