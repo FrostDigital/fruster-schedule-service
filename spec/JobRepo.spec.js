@@ -5,7 +5,6 @@ const fixtures = require("./support/fixtures");
 const jobStates = require("../constants").jobStates;
 
 describe("JobRepo", () => {
-
 	let repo;
 
 	testUtils.startBeforeEach({
@@ -15,13 +14,13 @@ describe("JobRepo", () => {
 		afterStart: (connection) => {
 			repo = new JobRepo(connection.db);
 			return Promise.resolve();
-		}
+		},
 	});
 
 	it("should insert job when it does not exist", (done) => {
 		const job = fixtures.job();
 
-		repo.create(job).then(createdJob => {
+		repo.create(job).then((createdJob) => {
 			expect(createdJob.id).toBe(job.id);
 			done();
 		});
@@ -38,13 +37,13 @@ describe("JobRepo", () => {
 				job.subject = "updated";
 				return repo.create(job);
 			})
-			.then(updatedJob => {
+			.then((updatedJob) => {
 				expect(updatedJob.id).toBe(job.id);
 				expect(updatedJob.subject).toBe("updated");
 				expect(updatedJob.created).toEqual(created);
 			})
 			.then(() => repo.findAll())
-			.then(all => {
+			.then((all) => {
 				expect(all.length).toBe(1);
 				done();
 			});
@@ -55,7 +54,7 @@ describe("JobRepo", () => {
 
 		repo.create(job)
 			.then(() => repo.findAll())
-			.then(all => {
+			.then((all) => {
 				expect(all.length).toBe(1);
 				expect(all[0]._id).toBeUndefined();
 				expect(all[0].id).toBe(job.id);
@@ -67,30 +66,31 @@ describe("JobRepo", () => {
 		const job1 = fixtures.job({
 			id: "id1",
 			state: jobStates.running,
-			invocations: []
+			invocations: [],
 		});
 		const job2 = fixtures.job({
 			id: "id2",
 			state: jobStates.scheduled,
-			invocations: []
+			invocations: [],
 		});
 		const job3 = fixtures.job({
 			id: "id3",
 			state: jobStates.initial,
-			invocations: []
+			invocations: [],
 		});
 		const job4 = fixtures.job({
 			id: "id4",
 			state: jobStates.scheduledAfterFailure,
-			invocations: []
+			invocations: [],
 		});
 
 		repo.create(job1)
 			.then(repo.create(job2))
 			.then(repo.create(job3))
 			.then(repo.create(job4))
+			.then(sleep)
 			.then(() => repo.findAllSchedulable())
-			.then(all => {
+			.then((all) => {
 				expect(all.length).toBe(4);
 				expect(all[0].invocations).toBeUndefined();
 				done();
@@ -103,15 +103,18 @@ describe("JobRepo", () => {
 		repo.create(job)
 			.then((createdJob) => {
 				createdJob.state = jobStates.failed;
-				return repo.update(createdJob, { startTime: new Date(), endTime: new Date() });
+				return repo.update(createdJob, {
+					startTime: new Date(),
+					endTime: new Date(),
+				});
 			})
-			.then(updatedJob => {
+			.then((updatedJob) => {
 				expect(updatedJob.lastFailure).toBeDefined();
 				expect(updatedJob.failureCount).toBe(1);
 				expect(updatedJob.totalFailureCount).toBe(1);
 				return repo.update(updatedJob, { aInvocation: "" });
 			})
-			.then(updatedJob => {
+			.then((updatedJob) => {
 				expect(updatedJob.failureCount).toBe(2);
 				expect(updatedJob.totalFailureCount).toBe(2);
 				done();
@@ -130,10 +133,13 @@ describe("JobRepo", () => {
 			});
 	});
 
-
 	function wait(o) {
-		return new Promise(resolve => {
+		return new Promise((resolve) => {
 			setTimeout(() => resolve(o), 100);
 		});
 	}
 });
+
+async function sleep() {
+	return new Promise((resolve) => setTimeout(resolve, 1000));
+}
