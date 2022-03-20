@@ -1,12 +1,11 @@
 {
-    "type": "object",
-    "properties": {
-    	"id": {
-            "type": "string",
-            "description": "Id of job to remove"
-    	}
-    },
-    "required": [
-        "id"
-    ]
+	"type": "object",
+	"id": "removeJob",
+	"properties": {
+		"id": {
+			"type": "string",
+			"description": "Id of job to remove"
+		}
+	},
+	"required": ["id"]
 }
