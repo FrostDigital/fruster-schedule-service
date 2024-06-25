@@ -4,6 +4,7 @@ const bus = require("fruster-bus");
 const scheduleService = require("../schedule-service");
 const constants = require("../constants");
 const fixtures = require("./support/fixtures");
+const errors = require("../lib/errors");
 
 describe("RemoveJobHandler", () => {
 
@@ -24,7 +25,7 @@ describe("RemoveJobHandler", () => {
 		})
 			.catch(err => {
 				expect(err.status).toBe(400);
-				expect(err.error.code).toBe("BAD_REQUEST");
+				expect(err.error.code).toBe(errors.badRequest().error.code);
 
 				done();
 			});
@@ -38,7 +39,7 @@ describe("RemoveJobHandler", () => {
 			}
 		})
 			.catch(err => {
-				expect(err).toBeError("NOT_FOUND");
+				expect(err.error.code).toBe(errors.notFound().error.code);
 				done();
 			});
 	});
