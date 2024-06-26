@@ -9,40 +9,42 @@ const CronRunner = require("./lib/cron/CronRunner");
 const conf = require("./conf");
 const docs = require("./lib/docs");
 
-module.exports.start = (busAddress, mongoUrl) => {
+module.exports.start = async (busAddress, mongoUrl) => {
+	await bus.connect(busAddress);
 
-	return bus.connect(busAddress)
-		.then(() => mongo.connect(mongoUrl))
-		.then((db) => createIndexes(db))
-		.then((db) => {
-			const jobRepo = new JobRepo(db);
+	/** @type {mongo.Db}*/
+	const db = (await mongo.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })).db();
 
-			const cronRunner = new CronRunner(jobRepo, {
-				start: true,
-				syncInterval: conf.syncInterval,
-				maxFailures: conf.maxFailures
-			});
+	if (!process.env.CI)
+		createIndexes(db);
 
-			const CreateJobRequest = require("./lib/schemas/CreateJobRequest");
-			const RemoveJobRequest = require("./lib/schemas/RemoveJobRequest");
+	const jobRepo = new JobRepo(db);
 
-			const createJob = new CreateJobHandler(jobRepo, cronRunner);
-			const removeJob = new RemoveJobHandler(jobRepo, cronRunner);
+	const cronRunner = new CronRunner(jobRepo, {
+		start: true,
+		syncInterval: conf.syncInterval,
+		maxFailures: conf.maxFailures
+	});
 
-			bus.subscribe({
-				subject: constants.exposing.createJob,
-				requestSchema: CreateJobRequest,
-				docs: docs.service.CREATE_JOB,
-				handle: req => createJob.handle(req)
-			});
+	const CreateJobRequest = require("./lib/schemas/CreateJobRequest");
+	const RemoveJobRequest = require("./lib/schemas/RemoveJobRequest");
 
-			bus.subscribe({
-				subject: constants.exposing.removeJob,
-				requestSchema: RemoveJobRequest,
-				docs: docs.service.REMOVE_JOB,
-				handle: req => removeJob.handle(req)
-			});
-		});
+	const createJob = new CreateJobHandler(jobRepo, cronRunner);
+	const removeJob = new RemoveJobHandler(jobRepo, cronRunner);
+
+	bus.subscribe({
+		subject: constants.exposing.createJob,
+		requestSchema: CreateJobRequest,
+		docs: docs.service.CREATE_JOB,
+		handle: req => createJob.handle(req)
+	});
+
+	bus.subscribe({
+		subject: constants.exposing.removeJob,
+		requestSchema: RemoveJobRequest,
+		docs: docs.service.REMOVE_JOB,
+		handle: req => removeJob.handle(req)
+	});
 };
 
 async function createIndexes(db) {
