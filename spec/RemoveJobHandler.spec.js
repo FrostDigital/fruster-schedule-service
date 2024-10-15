@@ -1,22 +1,14 @@
-const mongo = require("mongodb");
 const testUtils = require("fruster-test-utils");
 const bus = require("fruster-bus");
-const scheduleService = require("../schedule-service");
+
 const constants = require("../constants");
 const fixtures = require("./support/fixtures");
+const specConstants = require("./support/spec-constants");
 const errors = require("../lib/errors");
 
 describe("RemoveJobHandler", () => {
 
-	testUtils.startBeforeAll({
-		mongoUrl: "mongodb://localhost:27017/schedule-service-test",
-		service: scheduleService,
-		bus: bus,
-		mockNats: true,
-		afterStart: (connection) => {
-			return Promise.resolve();
-		}
-	});
+	testUtils.startBeforeEach(specConstants.testUtilsOptions());
 
 	it("should fail validation job", (done) => {
 		bus.request(constants.exposing.removeJob, {

@@ -1,58 +1,46 @@
-const mongo = require("mongodb");
 const testUtils = require("fruster-test-utils");
-const bus = require("fruster-bus");
-const scheduleService = require("../schedule-service");
+const bus = require("fruster-bus").testBus;
 const constants = require("../constants");
 const fixtures = require("./support/fixtures");
+const specConstants = require("./support/spec-constants");
 const errors = require("../lib/errors");
 
 describe("CreateJobHandler", () => {
 
-	testUtils.startBeforeAll({
-		mongoUrl: "mongodb://localhost:27017/schedule-service-test",
-		service: scheduleService,
-		bus: bus,
-		mockNats: true,
-		afterStart: (connection) => {
-			return Promise.resolve();
+	testUtils.startBeforeEach(specConstants.testUtilsOptions());
+
+	it("should fail validation", async () => {
+		try {
+			await bus.request({
+				subject: constants.exposing.createJob,
+				message: {
+					data: {}
+				}
+			});
+		} catch (err) {
+			expect(err.status).toBe(400);
+			expect(err.error.code).toBe(errors.badRequest().error.code);
 		}
 	});
 
-	it("should fail validation", (done) => {
-		bus.request(constants.exposing.createJob, {
-			reqId: "reqId",
-			data: {}
-		})
-			.catch(err => {
-				expect(err.status).toBe(400);
-				expect(err.error.code).toBe(errors.badRequest().error.code);
-
-				done();
-			});
-	});
-
-	it("should create a job", (done) => {
+	it("should create a job", async () => {
 		const jobReq = fixtures.jobReq();
 
-		let jobCreatedInvoked = false;
-
-		testUtils.mockService({
+		const publishMock = testUtils.mockService({
 			subject: constants.publishing.jobCreated,
-			expectData: (data) => {
-				jobCreatedInvoked = true;
-				expect(data.id).toBe(jobReq.data.id);
-			}
-		})
+			response: { status: 200 }
+		});
 
-		bus.request(constants.exposing.createJob, jobReq)
-			.then(resp => {
-				expect(resp.status).toBe(200);
-				expect(resp.data.id).toBe(jobReq.data.id);
-				expect(resp.data.subject).toBe(jobReq.data.subject);
-				expect(resp.data.cron).toBe(jobReq.data.cron);
-				expect(jobCreatedInvoked).toBeTruthy(`${constants.publishing.jobCreated} should have been published`);
-				done();
-			});
+		const { status, data } = await bus.request({
+			subject: constants.exposing.createJob,
+			message: jobReq
+		});
+
+		expect(status).toBe(200);
+		expect(data.id).toBe(jobReq.data.id);
+		expect(data.subject).toBe(jobReq.data.subject);
+		expect(data.cron).toBe(jobReq.data.cron);
+		expect(publishMock.requests[0].data.id).toBe(jobReq.data.id);
 	});
 
 });

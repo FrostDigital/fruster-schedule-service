@@ -12,8 +12,8 @@ const docs = require("./lib/docs");
 module.exports.start = async (busAddress, mongoUrl) => {
 	await bus.connect(busAddress);
 
-	/** @type {mongo.Db}*/
-	const db = (await mongo.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })).db();
+	const client = new mongo.MongoClient(mongoUrl);
+	const db = (await client.connect()).db();
 
 	if (!process.env.CI)
 		createIndexes(db);

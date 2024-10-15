@@ -1,21 +1,15 @@
 const testUtils = require("fruster-test-utils");
-const bus = require("fruster-bus");
 const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
+const specConstants = require("./support/spec-constants");
 const jobStates = require("../constants").jobStates;
 
 describe("JobRepo", () => {
 	let repo;
 
-	testUtils.startBeforeEach({
-		mongoUrl: "mongodb://localhost:27017/job-repo-test",
-		bus: bus,
-		mockNats: true,
-		afterStart: (connection) => {
-			repo = new JobRepo(connection.db);
-			return Promise.resolve();
-		},
-	});
+	testUtils.startBeforeEach(specConstants.testUtilsOptions(async (connection) => {
+		repo = new JobRepo(connection.db);
+	}));
 
 	it("should insert job when it does not exist", (done) => {
 		const job = fixtures.job();
