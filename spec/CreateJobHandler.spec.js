@@ -6,16 +6,26 @@ const specConstants = require("./support/spec-constants");
 const errors = require("../lib/errors");
 
 describe("CreateJobHandler", () => {
-
-	testUtils.startBeforeEach(specConstants.testUtilsOptions());
+	testUtils.startBeforeEach(
+		specConstants.testUtilsOptions(async ({ db }) => {
+			try {
+				await db
+					.collection(constants.collections.invocations)
+					.deleteMany({});
+				await db.collection(constants.collections.jobs).deleteMany({});
+			} catch (err) {
+				console.error(err);
+			}
+		})
+	);
 
 	it("should fail validation", async () => {
 		try {
 			await bus.request({
 				subject: constants.exposing.createJob,
 				message: {
-					data: {}
-				}
+					data: {},
+				},
 			});
 		} catch (err) {
 			expect(err.status).toBe(400);
@@ -28,12 +38,12 @@ describe("CreateJobHandler", () => {
 
 		const publishMock = testUtils.mockService({
 			subject: constants.publishing.jobCreated,
-			response: { status: 200 }
+			response: { status: 200 },
 		});
 
 		const { status, data } = await bus.request({
 			subject: constants.exposing.createJob,
-			message: jobReq
+			message: jobReq,
 		});
 
 		expect(status).toBe(200);
@@ -42,5 +52,4 @@ describe("CreateJobHandler", () => {
 		expect(data.cron).toBe(jobReq.data.cron);
 		expect(publishMock.requests[0].data.id).toBe(jobReq.data.id);
 	});
-
 });

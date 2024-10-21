@@ -2,14 +2,26 @@ const testUtils = require("fruster-test-utils");
 const JobRepo = require("../lib/repos/JobRepo");
 const fixtures = require("./support/fixtures");
 const specConstants = require("./support/spec-constants");
+const { wait } = require("./support/spec-utils");
+const constants = require("../constants");
 const jobStates = require("../constants").jobStates;
 
 describe("JobRepo", () => {
 	let repo;
 
-	testUtils.startBeforeEach(specConstants.testUtilsOptions(async (connection) => {
-		repo = new JobRepo(connection.db);
-	}));
+	testUtils.startBeforeEach(
+		specConstants.testUtilsOptions(async ({ db }) => {
+			try {
+				await db
+					.collection(constants.collections.invocations)
+					.deleteMany({});
+				await db.collection(constants.collections.jobs).deleteMany({});
+			} catch (err) {
+				console.error(err);
+			}
+			repo = new JobRepo(db);
+		})
+	);
 
 	it("should insert job when it does not exist", (done) => {
 		const job = fixtures.job();
@@ -20,27 +32,25 @@ describe("JobRepo", () => {
 		});
 	});
 
-	it("should upsert job when it already exists", (done) => {
+	it("should upsert job when it already exists", async () => {
 		let job = fixtures.job();
 		let created;
 
-		repo.create(job)
-			.then(wait) // wait so created date is not same (not sure if needed though)
-			.then((createdJob) => {
-				created = createdJob.created;
-				job.subject = "updated";
-				return repo.create(job);
-			})
-			.then((updatedJob) => {
-				expect(updatedJob.id).toBe(job.id);
-				expect(updatedJob.subject).toBe("updated");
-				expect(updatedJob.created).toEqual(created);
-			})
-			.then(() => repo.findAll())
-			.then((all) => {
-				expect(all.length).toBe(1);
-				done();
-			});
+		const createdJob = await repo.create(job);
+		await wait(100); // wait so created date is not same (not sure if needed though)
+
+		created = createdJob.created;
+		job.subject = "updated";
+
+		const updatedJob = await repo.create(job);
+
+		expect(updatedJob.id).toBe(job.id);
+		expect(updatedJob.subject).toBe("updated");
+		expect(updatedJob.created).toEqual(created);
+
+		const all = await repo.findAll();
+
+		expect(all.length).toBe(1);
 	});
 
 	it("should find all jobs", (done) => {
@@ -126,12 +136,6 @@ describe("JobRepo", () => {
 				done();
 			});
 	});
-
-	function wait(o) {
-		return new Promise((resolve) => {
-			setTimeout(() => resolve(o), 100);
-		});
-	}
 });
 
 async function sleep() {

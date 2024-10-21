@@ -13,5 +13,5 @@ module.exports = {
 			afterStart,
 			mongoUrl: "mongodb://localhost:27017/fruster-schedule-service-test",
 		};
-	}
+	},
 };
