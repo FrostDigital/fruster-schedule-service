@@ -35,14 +35,13 @@ describe("RemoveJobHandler", () => {
 
 	it("should fail to remove job that does not exist", async () => {
 		try {
-			const res = await bus.request(constants.exposing.removeJob, {
+			await bus.request(constants.exposing.removeJob, {
 				reqId: "reqId",
 				data: {
 					id: "foooo",
 				},
 			});
 
-			console.log(res);
 			fail();
 		} catch (err) {
 			expect(err.error.code).toBe(errors.notFound().error.code);
